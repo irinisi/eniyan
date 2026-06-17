@@ -5,6 +5,7 @@ from aiogram.fsm.state import State, StatesGroup
 from aiogram.types import CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup, Message
 
 import api_client
+from dateparse import parse_due
 
 router = Router()
 
@@ -32,13 +33,25 @@ async def task_title(message: Message, state: FSMContext):
 async def task_assignee(message: Message, state: FSMContext):
     await state.update_data(assignee=message.text)
     await state.set_state(NewTask.due)
-    await message.answer("Срок? (YYYY-MM-DD, или '-' если без срока)")
+    await message.answer(
+        "Срок? (например: 2026-06-20, 20.06, через неделю, через 3 дня, завтра, "
+        "или '-' если без срока)"
+    )
 
 
 @router.message(NewTask.due)
 async def task_due(message: Message, state: FSMContext):
+    try:
+        due_date = parse_due(message.text)
+    except ValueError:
+        await message.answer(
+            "Не понял срок. Примеры: 2026-06-20, 20.06, через неделю, через 3 дня, "
+            "завтра, 15, или '-' если без срока."
+        )
+        return
+
     data = await state.get_data()
-    due = None if message.text.strip() == "-" else message.text.strip()
+    due = due_date.isoformat() if due_date else None
     payload = {"title": data["title"], "assignee": data["assignee"], "due": due}
     task = await api_client.create_task(payload)
     await state.clear()
