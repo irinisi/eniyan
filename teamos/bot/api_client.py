@@ -24,6 +24,15 @@ async def update_task(task_id: str, payload: dict) -> dict:
         return resp.json()
 
 
+async def delete_task(task_id: str) -> bool:
+    async with httpx.AsyncClient(base_url=API_BASE_URL) as client:
+        resp = await client.delete(f"/api/tasks/{task_id}")
+        if resp.status_code == 404:
+            return False
+        resp.raise_for_status()
+        return True
+
+
 async def search_knowledge(query: str) -> list[dict]:
     async with httpx.AsyncClient(base_url=API_BASE_URL) as client:
         resp = await client.get("/api/knowledge", params={"q": query})

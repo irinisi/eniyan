@@ -18,6 +18,7 @@ async def start(message: Message):
         "Команды:\n"
         "/tasks — мои задачи\n"
         "/newtask — создать задачу\n"
+        "/deltask <id> — удалить задачу\n"
         "/search <запрос> — поиск по базе знаний\n",
         reply_markup=keyboard,
     )

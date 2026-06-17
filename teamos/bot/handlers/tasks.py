@@ -1,5 +1,5 @@
 from aiogram import F, Router
-from aiogram.filters import Command
+from aiogram.filters import Command, CommandObject
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
 from aiogram.types import CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup, Message
@@ -65,8 +65,24 @@ async def list_my_tasks(message: Message):
     if not open_tasks:
         await message.answer("Нет активных задач 🎉")
         return
-    lines = [f"• {t['title']} — {t['status']} ({t.get('assignee') or 'без исполнителя'})" for t in open_tasks]
+    lines = [
+        f"• {t['title']} — {t['status']} ({t.get('assignee') or 'без исполнителя'}) [{t['id']}]"
+        for t in open_tasks
+    ]
     await message.answer("\n".join(lines))
+
+
+@router.message(Command("deltask"))
+async def delete_task_command(message: Message, command: CommandObject):
+    task_id = (command.args or "").strip()
+    if not task_id:
+        await message.answer("Укажи id задачи: /deltask task-001")
+        return
+    deleted = await api_client.delete_task(task_id)
+    if deleted:
+        await message.answer(f"Задача {task_id} удалена")
+    else:
+        await message.answer(f"Задача {task_id} не найдена")
 
 
 def task_quick_actions_keyboard(task_id: str) -> InlineKeyboardMarkup:
