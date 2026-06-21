@@ -1,8 +1,9 @@
 services:
   backend:
     build: ./backend
+    restart: unless-stopped
     ports:
-      - "8000:8000"
+      - "127.0.0.1:8000:8000"
     volumes:
       - ./vault:/vault
     environment:
@@ -11,24 +12,19 @@ services:
 
   bot:
     build: ./bot
+    restart: unless-stopped
     depends_on:
       - backend
     env_file: .env
 
-  miniapp:
-    image: nginx:alpine
-    ports:
-      - "8080:80"
-    volumes:
-      - ./miniapp:/usr/share/nginx/html:ro
-
   syncthing:
     image: syncthing/syncthing
+    restart: unless-stopped
     volumes:
       - ./vault:/var/syncthing/vault
       - syncthing-config:/var/syncthing/config
     ports:
-      - "8384:8384"
+      - "127.0.0.1:8384:8384"
       - "22000:22000/tcp"
       - "22000:22000/udp"
       - "21027:21027/udp"
