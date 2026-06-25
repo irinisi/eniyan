@@ -5,21 +5,24 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>TeamOS</title>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/preline@2.5.1/dist/preline.min.css" />
 <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <main id="app"></main>
 
-  <nav class="tabbar">
-    <button data-tab="home" class="active">🏠<span>Главная</span></button>
-    <button data-tab="tasks">✅<span>Задачи</span></button>
-    <button data-tab="projects">📁<span>Проекты</span></button>
-    <button data-tab="knowledge">📚<span>База знаний</span></button>
-    <button data-tab="profile">👤<span>Профиль</span></button>
+  <nav class="tos-surface fixed inset-x-0 bottom-0 flex border-t border-black/5 z-10">
+    <button data-tab="home" class="active flex-1 flex flex-col items-center gap-0.5 py-2 text-xl text-[var(--button)]">🏠<span class="text-[11px]">Главная</span></button>
+    <button data-tab="tasks" class="flex-1 flex flex-col items-center gap-0.5 py-2 text-xl tos-hint">✅<span class="text-[11px]">Задачи</span></button>
+    <button data-tab="projects" class="flex-1 flex flex-col items-center gap-0.5 py-2 text-xl tos-hint">📁<span class="text-[11px]">Проекты</span></button>
+    <button data-tab="knowledge" class="flex-1 flex flex-col items-center gap-0.5 py-2 text-xl tos-hint">📚<span class="text-[11px]">База знаний</span></button>
+    <button data-tab="profile" class="flex-1 flex flex-col items-center gap-0.5 py-2 text-xl tos-hint">👤<span class="text-[11px]">Профиль</span></button>
   </nav>
 
   <script src="config.js"></script>
   <script src="api.js"></script>
   <script src="app.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/preline@2.5.1/dist/preline.min.js"></script>
 </body>
 </html>
