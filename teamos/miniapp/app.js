@@ -292,8 +292,12 @@ async function renderNewTaskForm(initialStatus) {
       status: initialStatus || "todo",
     };
     if (!payload.title) return;
-    await api.createTask(payload);
-    renderTasks();
+    try {
+      await api.createTask(payload);
+      renderTasks();
+    } catch (err) {
+      alert(`Ошибка: ${err.message}`);
+    }
   });
   window.lucide?.createIcons();
 }
@@ -318,8 +322,12 @@ async function renderProjects() {
   app.querySelectorAll("[data-delete-project]").forEach((btn) => {
     btn.addEventListener("click", async (e) => {
       e.stopPropagation();
-      await api.deleteProject(btn.dataset.deleteProject);
-      renderProjects();
+      try {
+        await api.deleteProject(btn.dataset.deleteProject);
+        renderProjects();
+      } catch (err) {
+        alert(`Ошибка: ${err.message}`);
+      }
     });
   });
   window.lucide?.createIcons();
@@ -353,13 +361,17 @@ function renderNewProjectForm() {
       .value.split(",")
       .map((m) => m.trim())
       .filter(Boolean);
-    await api.createProject({
-      title,
-      description: document.getElementById("f-description").value,
-      members,
-      links: [],
-    });
-    renderProjects();
+    try {
+      await api.createProject({
+        title,
+        description: document.getElementById("f-description").value,
+        members,
+        links: [],
+      });
+      renderProjects();
+    } catch (err) {
+      alert(`Ошибка: ${err.message}`);
+    }
   });
   window.lucide?.createIcons();
 }
