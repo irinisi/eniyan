@@ -8,6 +8,13 @@ import api_client
 
 router = Router()
 
+STATUS_LABELS = {
+    "todo": "Todo",
+    "in_progress": "In Progress",
+    "review": "Review",
+    "done": "Done",
+}
+
 
 class NewTask(StatesGroup):
     title = State()
@@ -52,8 +59,9 @@ async def list_my_tasks(message: Message):
     if not open_tasks:
         await message.answer("Нет активных задач 🎉")
         return
-    lines = [f"• {t['title']} — {t['status']} ({t.get('assignee') or 'без исполнителя'})" for t in open_tasks]
-    await message.answer("\n".join(lines))
+    for task in open_tasks:
+        text = f"{task['title']} — {STATUS_LABELS[task['status']]} ({task.get('assignee') or 'без исполнителя'})"
+        await message.answer(text, reply_markup=task_quick_actions_keyboard(task["id"]))
 
 
 def task_quick_actions_keyboard(task_id: str) -> InlineKeyboardMarkup:
@@ -61,13 +69,19 @@ def task_quick_actions_keyboard(task_id: str) -> InlineKeyboardMarkup:
         inline_keyboard=[
             [
                 InlineKeyboardButton(text="✔ Выполнить", callback_data=f"task:done:{task_id}"),
-                InlineKeyboardButton(text="📅 Перенести", callback_data=f"task:postpone:{task_id}"),
-            ],
-            [
-                InlineKeyboardButton(text="👤 Назначить", callback_data=f"task:assign:{task_id}"),
-                InlineKeyboardButton(text="✏ Открыть", callback_data=f"task:open:{task_id}"),
+                InlineKeyboardButton(text="🔄 Статус", callback_data=f"task:status:{task_id}"),
             ],
         ]
+    )
+
+
+def task_status_keyboard(task_id: str) -> InlineKeyboardMarkup:
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [InlineKeyboardButton(text=label, callback_data=f"task:setstatus:{task_id}:{status}")]
+            for status, label in STATUS_LABELS.items()
+        ]
+        + [[InlineKeyboardButton(text="← Назад", callback_data=f"task:back:{task_id}")]]
     )
 
 
@@ -77,3 +91,25 @@ async def complete_task(callback: CallbackQuery):
     await api_client.update_task(task_id, {"status": "done"})
     await callback.answer("Задача выполнена")
     await callback.message.edit_text(f"{callback.message.text}\n\n✔ Выполнено")
+
+
+@router.callback_query(F.data.startswith("task:status:"))
+async def choose_status(callback: CallbackQuery):
+    task_id = callback.data.split(":")[-1]
+    await callback.answer()
+    await callback.message.edit_reply_markup(reply_markup=task_status_keyboard(task_id))
+
+
+@router.callback_query(F.data.startswith("task:back:"))
+async def back_to_actions(callback: CallbackQuery):
+    task_id = callback.data.split(":")[-1]
+    await callback.answer()
+    await callback.message.edit_reply_markup(reply_markup=task_quick_actions_keyboard(task_id))
+
+
+@router.callback_query(F.data.startswith("task:setstatus:"))
+async def set_status(callback: CallbackQuery):
+    _, _, task_id, status = callback.data.split(":")
+    await api_client.update_task(task_id, {"status": status})
+    await callback.answer(f"Статус: {STATUS_LABELS[status]}")
+    await callback.message.edit_reply_markup(reply_markup=task_quick_actions_keyboard(task_id))
