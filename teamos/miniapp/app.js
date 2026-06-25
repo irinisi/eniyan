@@ -262,14 +262,18 @@ async function renderTaskDetail(taskId) {
 
 const FORM_FIELD = "tos-input w-full rounded-lg border px-3 py-2 mb-3 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--button)]";
 
-function renderNewTaskForm(initialStatus) {
+async function renderNewTaskForm(initialStatus) {
+  const projects = await api.getProjects();
   app.innerHTML = `
     <h1 class="text-2xl font-semibold mb-4">Новая задача</h1>
     <input id="f-title" class="${FORM_FIELD}" placeholder="Название" />
     <textarea id="f-description" class="${FORM_FIELD}" placeholder="Описание"></textarea>
     <input id="f-assignee" class="${FORM_FIELD}" placeholder="Исполнитель" />
     <input id="f-due" class="${FORM_FIELD}" type="date" />
-    <input id="f-project" class="${FORM_FIELD}" placeholder="Проект (id)" />
+    <select id="f-project" class="${FORM_FIELD}">
+      <option value="">Без проекта</option>
+      ${projects.map((p) => `<option value="${p.id}">${escapeHtml(p.title)}</option>`).join("")}
+    </select>
     <select id="f-priority" class="${FORM_FIELD}">
       <option value="low">Низкий приоритет</option>
       <option value="medium" selected>Средний приоритет</option>
@@ -294,22 +298,98 @@ function renderNewTaskForm(initialStatus) {
   window.lucide?.createIcons();
 }
 
+function newProjectCard() {
+  return `
+    <button id="new-project-btn" class="tos-accent w-full rounded-lg py-2.5 px-4 text-sm font-medium mb-4 hover:opacity-90 transition flex items-center justify-center gap-2">${icon("plus")} Новый проект</button>
+  `;
+}
+
 async function renderProjects() {
   const projects = await api.getProjects();
   app.innerHTML = `
     <h1 class="text-2xl font-semibold mb-4">Проекты</h1>
+    ${newProjectCard()}
     ${projects.map(projectCard).join("") || emptyState("Нет проектов")}
   `;
+  document.getElementById("new-project-btn").addEventListener("click", renderNewProjectForm);
+  app.querySelectorAll(".card[data-project-id]").forEach((card) => {
+    card.addEventListener("click", () => renderProjectDetail(card.dataset.projectId));
+  });
+  app.querySelectorAll("[data-delete-project]").forEach((btn) => {
+    btn.addEventListener("click", async (e) => {
+      e.stopPropagation();
+      await api.deleteProject(btn.dataset.deleteProject);
+      renderProjects();
+    });
+  });
   window.lucide?.createIcons();
 }
 
 function projectCard(project) {
   return `
-    <div class="tos-surface rounded-xl p-4 mb-3 shadow-sm">
-      <div class="font-medium">${escapeHtml(project.title)}</div>
-      <div class="tos-hint text-xs mt-1">${project.tasks.length} задач · ${project.members.join(", ") || "без участников"}</div>
+    <div class="card tos-surface rounded-xl p-4 mb-3 shadow-sm hover:shadow-md transition cursor-pointer flex items-center justify-between gap-2" data-project-id="${project.id}">
+      <div class="min-w-0">
+        <div class="font-medium truncate">${escapeHtml(project.title)}</div>
+        <div class="tos-hint text-xs mt-1">${project.tasks.length} задач · ${project.members.join(", ") || "без участников"}</div>
+      </div>
+      <button data-delete-project="${project.id}" class="shrink-0 text-red-600 hover:bg-red-50 rounded-lg p-2 transition">${icon("trash-2", "size-4")}</button>
     </div>
   `;
+}
+
+function renderNewProjectForm() {
+  app.innerHTML = `
+    <h1 class="text-2xl font-semibold mb-4">Новый проект</h1>
+    <input id="f-title" class="${FORM_FIELD}" placeholder="Название" />
+    <textarea id="f-description" class="${FORM_FIELD}" placeholder="Описание"></textarea>
+    <input id="f-members" class="${FORM_FIELD}" placeholder="Участники (через запятую)" />
+    <button class="tos-accent w-full rounded-lg py-2.5 px-4 text-sm font-medium hover:opacity-90 transition" id="save-btn">Сохранить</button>
+  `;
+  document.getElementById("save-btn").addEventListener("click", async () => {
+    const title = document.getElementById("f-title").value;
+    if (!title) return;
+    const members = document
+      .getElementById("f-members")
+      .value.split(",")
+      .map((m) => m.trim())
+      .filter(Boolean);
+    await api.createProject({
+      title,
+      description: document.getElementById("f-description").value,
+      members,
+      links: [],
+    });
+    renderProjects();
+  });
+  window.lucide?.createIcons();
+}
+
+async function renderProjectDetail(projectId) {
+  const [project, allTasks] = await Promise.all([api.getProject(projectId), api.getTasks()]);
+  const tasks = allTasks.filter((t) => t.project === projectId);
+  app.innerHTML = `
+    <button id="back-btn" class="tos-hint text-sm mb-4 flex items-center gap-1">${icon("arrow-left", "size-4")} Назад</button>
+    <h1 class="text-2xl font-semibold mb-1">${escapeHtml(project.title)}</h1>
+    <p class="text-sm tos-hint mb-4">${escapeHtml(project.description || "")}</p>
+    <h2 class="text-sm font-medium tos-hint uppercase tracking-wide mb-2">К выполнению</h2>
+    ${taskGroup(tasks.filter((t) => t.status === "todo"))}
+    <h2 class="text-sm font-medium tos-hint uppercase tracking-wide mb-2 mt-5">В работе</h2>
+    ${taskGroup(tasks.filter((t) => t.status === "in_progress"))}
+    <h2 class="text-sm font-medium tos-hint uppercase tracking-wide mb-2 mt-5">Ревью</h2>
+    ${taskGroup(tasks.filter((t) => t.status === "review"))}
+    <h2 class="text-sm font-medium tos-hint uppercase tracking-wide mb-2 mt-5">Выполнено</h2>
+    ${taskGroup(tasks.filter((t) => t.status === "done"))}
+    <button class="w-full rounded-lg py-2.5 px-4 text-sm font-medium mt-4 border tos-border text-red-600 hover:bg-red-50 transition" id="delete-project-btn">Удалить проект</button>
+  `;
+  document.getElementById("back-btn").addEventListener("click", renderProjects);
+  document.getElementById("delete-project-btn").addEventListener("click", async () => {
+    await api.deleteProject(projectId);
+    renderProjects();
+  });
+  app.querySelectorAll(".card[data-task-id]").forEach((card) => {
+    card.addEventListener("click", () => renderTaskDetail(card.dataset.taskId));
+  });
+  window.lucide?.createIcons();
 }
 
 async function renderKnowledge() {

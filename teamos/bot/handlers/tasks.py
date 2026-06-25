@@ -22,7 +22,18 @@ STATUS_LABELS = {
 class NewTask(StatesGroup):
     title = State()
     assignee = State()
+    project = State()
     due = State()
+
+
+def project_choice_keyboard(projects: list[dict]) -> InlineKeyboardMarkup:
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [InlineKeyboardButton(text=p["title"], callback_data=f"newtask:project:{p['id']}")]
+            for p in projects
+        ]
+        + [[InlineKeyboardButton(text="Без проекта", callback_data="newtask:project:")]]
+    )
 
 
 @router.message(Command("newtask"))
@@ -41,8 +52,26 @@ async def task_title(message: Message, state: FSMContext):
 @router.message(NewTask.assignee)
 async def task_assignee(message: Message, state: FSMContext):
     await state.update_data(assignee=message.text)
+    await state.set_state(NewTask.project)
+    projects = await api_client.get_projects()
+    if not projects:
+        await state.update_data(project=None)
+        await state.set_state(NewTask.due)
+        await message.answer(
+            "Срок? Примеры: '-' (без срока), 'сегодня', 'завтра', '15' (число этого/следующего месяца), "
+            "'12.08', 'через неделю', 'через 3 дня', 'пятницу'"
+        )
+        return
+    await message.answer("Выбери проект:", reply_markup=project_choice_keyboard(projects))
+
+
+@router.callback_query(NewTask.project, F.data.startswith("newtask:project:"))
+async def task_project(callback: CallbackQuery, state: FSMContext):
+    project_id = callback.data.split(":", 2)[2] or None
+    await state.update_data(project=project_id)
     await state.set_state(NewTask.due)
-    await message.answer(
+    await callback.answer()
+    await callback.message.answer(
         "Срок? Примеры: '-' (без срока), 'сегодня', 'завтра', '15' (число этого/следующего месяца), "
         "'12.08', 'через неделю', 'через 3 дня', 'пятницу'"
     )
@@ -59,6 +88,7 @@ async def task_due(message: Message, state: FSMContext):
     payload = {
         "title": data["title"],
         "assignee": data["assignee"],
+        "project": data.get("project"),
         "due": due.isoformat() if due else None,
     }
     task = await api_client.create_task(payload)

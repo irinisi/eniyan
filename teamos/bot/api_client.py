@@ -24,6 +24,13 @@ async def update_task(task_id: str, payload: dict) -> dict:
         return resp.json()
 
 
+async def get_projects() -> list[dict]:
+    async with httpx.AsyncClient(base_url=API_BASE_URL) as client:
+        resp = await client.get("/api/projects")
+        resp.raise_for_status()
+        return resp.json()
+
+
 async def search_knowledge(query: str) -> list[dict]:
     async with httpx.AsyncClient(base_url=API_BASE_URL) as client:
         resp = await client.get("/api/knowledge", params={"q": query})

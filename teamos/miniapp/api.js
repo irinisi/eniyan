@@ -18,6 +18,8 @@ const api = {
 
   getProjects: () => request("/api/projects"),
   getProject: (id) => request(`/api/projects/${id}`),
+  createProject: (data) => request("/api/projects", { method: "POST", body: JSON.stringify(data) }),
+  deleteProject: (id) => request(`/api/projects/${id}`, { method: "DELETE" }),
 
   searchKnowledge: (q) => request(`/api/knowledge?q=${encodeURIComponent(q || "")}`),
   getKnowledgeDoc: (id) => request(`/api/knowledge/${id}`),
