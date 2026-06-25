@@ -232,7 +232,7 @@ async function renderTaskDetail(taskId) {
     <h1 class="text-2xl font-semibold mb-2">${escapeHtml(task.title)}</h1>
     <p class="text-sm mb-4">${escapeHtml(task.description || "")}</p>
     <div class="tos-surface rounded-xl p-4 mb-4 space-y-1 text-sm">
-      <div><span class="tos-hint">Исполнитель:</span> ${task.assignee || "—"}</div>
+      <div><span class="tos-hint">Исполнитель:</span> ${assigneeLink(task.assignee)}</div>
       <div><span class="tos-hint">Проект:</span> ${task.project || "—"}</div>
       <div><span class="tos-hint">Срок:</span> ${task.due || "—"}</div>
     </div>
@@ -260,15 +260,26 @@ async function renderTaskDetail(taskId) {
   window.lucide?.createIcons();
 }
 
+function assigneeLink(assignee) {
+  if (!assignee) return "—";
+  const username = assignee.trim().replace(/^@/, "");
+  if (!/^[A-Za-z0-9_]+$/.test(username)) return escapeHtml(assignee);
+  return `<a href="https://t.me/${username}" target="_blank" class="text-[var(--button)] underline">${escapeHtml(assignee)}</a>`;
+}
+
 const FORM_FIELD = "tos-input w-full rounded-lg border px-3 py-2 mb-3 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--button)]";
 
 async function renderNewTaskForm(initialStatus) {
-  const projects = await api.getProjects();
+  const [projects, tasks] = await Promise.all([api.getProjects(), api.getTasks()]);
+  const assignees = [...new Set(tasks.map((t) => t.assignee).filter(Boolean))];
   app.innerHTML = `
     <h1 class="text-2xl font-semibold mb-4">Новая задача</h1>
     <input id="f-title" class="${FORM_FIELD}" placeholder="Название" />
     <textarea id="f-description" class="${FORM_FIELD}" placeholder="Описание"></textarea>
-    <input id="f-assignee" class="${FORM_FIELD}" placeholder="Исполнитель" />
+    <input id="f-assignee" class="${FORM_FIELD}" placeholder="Исполнитель" list="f-assignee-list" />
+    <datalist id="f-assignee-list">
+      ${assignees.map((a) => `<option value="${escapeHtml(a)}"></option>`).join("")}
+    </datalist>
     <input id="f-due" class="${FORM_FIELD}" type="date" />
     <select id="f-project" class="${FORM_FIELD}">
       <option value="">Без проекта</option>

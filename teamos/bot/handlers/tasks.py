@@ -36,22 +36,26 @@ def project_choice_keyboard(projects: list[dict]) -> InlineKeyboardMarkup:
     )
 
 
-@router.message(Command("newtask"))
-async def start_new_task(message: Message, state: FSMContext):
-    await state.set_state(NewTask.title)
-    await message.answer("Название задачи?")
+def assignee_choice_keyboard(assignees: list[str]) -> InlineKeyboardMarkup:
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [InlineKeyboardButton(text=a, callback_data=f"newtask:assignee:{a}")]
+            for a in assignees
+        ]
+        + [[InlineKeyboardButton(text="✍ Ввести вручную", callback_data="newtask:assignee:")]]
+    )
 
 
-@router.message(NewTask.title)
-async def task_title(message: Message, state: FSMContext):
-    await state.update_data(title=message.text)
-    await state.set_state(NewTask.assignee)
-    await message.answer("Кто исполнитель? (имя или telegram id)")
+def telegram_link(assignee: str | None) -> str:
+    if not assignee:
+        return "без исполнителя"
+    username = assignee.strip().lstrip("@")
+    if username.replace("_", "").isalnum():
+        return f'<a href="https://t.me/{username}">{assignee}</a>'
+    return assignee
 
 
-@router.message(NewTask.assignee)
-async def task_assignee(message: Message, state: FSMContext):
-    await state.update_data(assignee=message.text)
+async def ask_project(message: Message, state: FSMContext):
     await state.set_state(NewTask.project)
     projects = await api_client.get_projects()
     if not projects:
@@ -63,6 +67,41 @@ async def task_assignee(message: Message, state: FSMContext):
         )
         return
     await message.answer("Выбери проект:", reply_markup=project_choice_keyboard(projects))
+
+
+@router.message(Command("newtask"))
+async def start_new_task(message: Message, state: FSMContext):
+    await state.set_state(NewTask.title)
+    await message.answer("Название задачи?")
+
+
+@router.message(NewTask.title)
+async def task_title(message: Message, state: FSMContext):
+    await state.update_data(title=message.text)
+    await state.set_state(NewTask.assignee)
+    tasks = await api_client.get_tasks()
+    assignees = sorted({t["assignee"] for t in tasks if t.get("assignee")})
+    if not assignees:
+        await message.answer("Кто исполнитель? (имя или telegram id)")
+        return
+    await message.answer("Кто исполнитель?", reply_markup=assignee_choice_keyboard(assignees))
+
+
+@router.message(NewTask.assignee)
+async def task_assignee(message: Message, state: FSMContext):
+    await state.update_data(assignee=message.text)
+    await ask_project(message, state)
+
+
+@router.callback_query(NewTask.assignee, F.data.startswith("newtask:assignee:"))
+async def task_assignee_choice(callback: CallbackQuery, state: FSMContext):
+    assignee = callback.data.split(":", 2)[2]
+    await callback.answer()
+    if not assignee:
+        await callback.message.answer("Кто исполнитель? (имя или telegram id)")
+        return
+    await state.update_data(assignee=assignee)
+    await ask_project(callback.message, state)
 
 
 @router.callback_query(NewTask.project, F.data.startswith("newtask:project:"))
@@ -104,8 +143,8 @@ async def list_my_tasks(message: Message):
         await message.answer("Нет активных задач 🎉")
         return
     for task in open_tasks:
-        text = f"{task['title']} — {STATUS_LABELS[task['status']]} ({task.get('assignee') or 'без исполнителя'})"
-        await message.answer(text, reply_markup=task_quick_actions_keyboard(task["id"]))
+        text = f"{task['title']} — {STATUS_LABELS[task['status']]} ({telegram_link(task.get('assignee'))})"
+        await message.answer(text, reply_markup=task_quick_actions_keyboard(task["id"]), parse_mode="HTML")
 
 
 def task_quick_actions_keyboard(task_id: str) -> InlineKeyboardMarkup:
