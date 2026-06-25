@@ -48,8 +48,8 @@ async function render(tab) {
 
 function initials(name) {
   if (!name) return "?";
-  return name
-    .trim()
+  const clean = name.trim().replace(/^@/, "");
+  return clean
     .split(/\s+/)
     .slice(0, 2)
     .map((p) => p[0]?.toUpperCase())
@@ -330,11 +330,17 @@ async function renderKnowledge() {
 
 function renderProfile() {
   const user = tg?.initDataUnsafe?.user;
+  const photoHtml = user?.photo_url
+    ? `<img src="${user.photo_url}" class="size-14 rounded-full object-cover shrink-0" />`
+    : avatar(user?.first_name || user?.username, "size-14");
   app.innerHTML = `
     <h1 class="text-2xl font-semibold mb-4">Профиль</h1>
-    <div class="tos-surface rounded-xl p-4 shadow-sm">
-      <div class="font-medium">${user ? escapeHtml(user.first_name) : "Гость"}</div>
-      <div class="tos-hint text-xs mt-1">${user ? `@${user.username || ""}` : "Telegram-данные не получены"}</div>
+    <div class="tos-surface rounded-xl p-4 shadow-sm flex items-center gap-4">
+      ${photoHtml}
+      <div>
+        <div class="font-medium">${user ? escapeHtml(user.first_name) : "Гость"}</div>
+        <div class="tos-hint text-xs mt-1">${user ? `@${user.username || ""}` : "Telegram-данные не получены"}</div>
+      </div>
     </div>
   `;
 }
