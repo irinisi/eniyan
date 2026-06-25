@@ -74,6 +74,17 @@ function statCard(iconName, label, count, id) {
   `;
 }
 
+function newTaskCard() {
+  return `
+    <button id="new-task-btn" class="stat-card tos-accent rounded-xl p-3 text-left shadow-sm hover:opacity-90 transition flex flex-col gap-1">
+      <div class="flex items-center justify-between">
+        ${icon("plus", "size-5")}
+      </div>
+      <span class="text-xs font-medium">Новая задача</span>
+    </button>
+  `;
+}
+
 async function renderHome() {
   const tasks = await api.getTasks();
   const today = new Date().toISOString().slice(0, 10);
@@ -85,10 +96,8 @@ async function renderHome() {
 
   app.innerHTML = `
     <h1 class="text-2xl font-semibold mb-4">Главная</h1>
-    <button class="tos-accent w-full rounded-lg py-2.5 px-4 text-sm font-medium mb-4 hover:opacity-90 transition flex items-center justify-center gap-2" id="new-task-btn">
-      ${icon("plus")} Новая задача
-    </button>
     <div class="grid grid-cols-2 gap-3 mb-5">
+      ${newTaskCard()}
       ${statCard("calendar-days", "Сегодня", dueToday.length, "today")}
       ${statCard("calendar-clock", "Запланировано", scheduled.length, "scheduled")}
       ${statCard("clipboard-list", "Все", open.length, "all")}
