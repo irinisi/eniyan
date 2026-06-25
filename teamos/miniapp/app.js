@@ -65,7 +65,7 @@ function avatar(name, size = "size-7") {
 function statCard(iconName, label, count, id) {
   return `
     <button data-stat="${id}" class="stat-card tos-surface rounded-xl p-3 text-left shadow-sm hover:shadow-md transition flex flex-col gap-1">
-      <div class="flex items-center justify-between">
+      <div class="flex items-center justify-between h-5">
         ${icon(iconName, "size-5")}
         <span class="text-xl font-semibold">${count}</span>
       </div>
@@ -77,7 +77,7 @@ function statCard(iconName, label, count, id) {
 function newTaskCard() {
   return `
     <button id="new-task-btn" class="stat-card tos-accent rounded-xl p-3 text-left shadow-sm hover:opacity-90 transition flex flex-col gap-1">
-      <div class="flex items-center justify-between">
+      <div class="flex items-center justify-between h-5">
         ${icon("plus", "size-5")}
       </div>
       <span class="text-xs font-medium">Новая задача</span>
@@ -128,8 +128,15 @@ async function renderHome() {
   window.lucide?.createIcons();
 }
 
+function byDueDate(a, b) {
+  if (!a.due && !b.due) return 0;
+  if (!a.due) return 1;
+  if (!b.due) return -1;
+  return a.due < b.due ? -1 : a.due > b.due ? 1 : 0;
+}
+
 function taskGroup(tasks) {
-  return tasks.map(taskRow).join("") || emptyState("Нет задач");
+  return [...tasks].sort(byDueDate).map(taskRow).join("") || emptyState("Нет задач");
 }
 
 function taskRow(task) {
