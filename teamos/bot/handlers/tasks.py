@@ -1,3 +1,5 @@
+from datetime import date
+
 from aiogram import F, Router
 from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
@@ -5,6 +7,7 @@ from aiogram.fsm.state import State, StatesGroup
 from aiogram.types import CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup, Message
 
 import api_client
+from date_parsing import DateParseError, parse_due
 
 router = Router()
 
@@ -39,14 +42,25 @@ async def task_title(message: Message, state: FSMContext):
 async def task_assignee(message: Message, state: FSMContext):
     await state.update_data(assignee=message.text)
     await state.set_state(NewTask.due)
-    await message.answer("Срок? (YYYY-MM-DD, или '-' если без срока)")
+    await message.answer(
+        "Срок? Примеры: '-' (без срока), 'сегодня', 'завтра', '15' (число этого/следующего месяца), "
+        "'12.08', 'через неделю', 'через 3 дня', 'пятницу'"
+    )
 
 
 @router.message(NewTask.due)
 async def task_due(message: Message, state: FSMContext):
+    try:
+        due = parse_due(message.text, date.today())
+    except DateParseError as exc:
+        await message.answer(str(exc))
+        return
     data = await state.get_data()
-    due = None if message.text.strip() == "-" else message.text.strip()
-    payload = {"title": data["title"], "assignee": data["assignee"], "due": due}
+    payload = {
+        "title": data["title"],
+        "assignee": data["assignee"],
+        "due": due.isoformat() if due else None,
+    }
     task = await api_client.create_task(payload)
     await state.clear()
     await message.answer(f"Задача создана: {task['title']} ({task['id']})")
