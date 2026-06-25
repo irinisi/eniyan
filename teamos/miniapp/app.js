@@ -28,17 +28,22 @@ tabs.forEach((btn) => {
   });
 });
 
+function icon(name, cls = "size-4") {
+  return `<i data-lucide="${name}" class="${cls} inline-block"></i>`;
+}
+
 async function render(tab) {
   app.innerHTML = "<p>Загрузка...</p>";
   try {
-    if (tab === "home") return renderHome();
-    if (tab === "tasks") return renderTasks();
-    if (tab === "projects") return renderProjects();
-    if (tab === "knowledge") return renderKnowledge();
-    if (tab === "profile") return renderProfile();
+    if (tab === "home") await renderHome();
+    else if (tab === "tasks") await renderTasks();
+    else if (tab === "projects") await renderProjects();
+    else if (tab === "knowledge") await renderKnowledge();
+    else if (tab === "profile") await renderProfile();
   } catch (err) {
     app.innerHTML = `<p>Ошибка: ${err.message}</p>`;
   }
+  window.lucide?.createIcons();
 }
 
 function initials(name) {
@@ -57,11 +62,11 @@ function avatar(name, size = "size-7") {
   )}</div>`;
 }
 
-function statCard(icon, label, count, id) {
+function statCard(iconName, label, count, id) {
   return `
     <button data-stat="${id}" class="stat-card tos-surface rounded-xl p-3 text-left shadow-sm hover:shadow-md transition flex flex-col gap-1">
       <div class="flex items-center justify-between">
-        <span class="text-lg">${icon}</span>
+        ${icon(iconName, "size-5")}
         <span class="text-xl font-semibold">${count}</span>
       </div>
       <span class="text-xs tos-hint">${label}</span>
@@ -81,14 +86,14 @@ async function renderHome() {
   app.innerHTML = `
     <h1 class="text-2xl font-semibold mb-4">Главная</h1>
     <button class="tos-accent w-full rounded-lg py-2.5 px-4 text-sm font-medium mb-4 hover:opacity-90 transition flex items-center justify-center gap-2" id="new-task-btn">
-      <span>➕</span> Новая задача
+      ${icon("plus")} Новая задача
     </button>
     <div class="grid grid-cols-2 gap-3 mb-5">
-      ${statCard("📅", "Сегодня", dueToday.length, "today")}
-      ${statCard("🗓️", "Запланировано", scheduled.length, "scheduled")}
-      ${statCard("📋", "Все", open.length, "all")}
-      ${statCard("🚩", "Срочные", flagged.length, "flagged")}
-      ${statCard("✅", "Выполнено", completed.length, "completed")}
+      ${statCard("calendar-days", "Сегодня", dueToday.length, "today")}
+      ${statCard("calendar-clock", "Запланировано", scheduled.length, "scheduled")}
+      ${statCard("clipboard-list", "Все", open.length, "all")}
+      ${statCard("flag", "Срочные", flagged.length, "flagged")}
+      ${statCard("check-circle", "Выполнено", completed.length, "completed")}
     </div>
     <h2 class="text-sm font-medium tos-hint uppercase tracking-wide mb-2">К выполнению</h2>
     ${taskGroup(open.filter((t) => t.status === "todo"))}
@@ -111,6 +116,7 @@ async function renderHome() {
   app.querySelectorAll(".card[data-task-id]").forEach((card) => {
     card.addEventListener("click", () => renderTaskDetail(card.dataset.taskId));
   });
+  window.lucide?.createIcons();
 }
 
 function taskGroup(tasks) {
@@ -157,7 +163,7 @@ async function renderTasks(filter) {
   const columns = ["todo", "in_progress", "review", "done"];
   app.innerHTML = `
     <h1 class="text-2xl font-semibold mb-4">Задачи</h1>
-    <button class="tos-accent w-full rounded-lg py-2.5 px-4 text-sm font-medium mb-4 hover:opacity-90 transition" id="new-task-btn">➕ Новая задача</button>
+    <button class="tos-accent w-full rounded-lg py-2.5 px-4 text-sm font-medium mb-4 hover:opacity-90 transition flex items-center justify-center gap-2" id="new-task-btn">${icon("plus")} Новая задача</button>
     <div class="flex gap-3 overflow-x-auto pb-2">
       ${columns
         .map((status) => {
@@ -166,7 +172,7 @@ async function renderTasks(filter) {
         <div class="min-w-[250px] flex-1">
           <div class="flex items-center justify-between mb-2">
             <h3 class="text-xs font-semibold tos-hint uppercase tracking-wide">${STATUS_LABELS[status]} <span class="tos-hint">(${colTasks.length})</span></h3>
-            <button data-new-status="${status}" class="text-xs tos-accent rounded-full px-2 py-0.5">+ Новая</button>
+            <button data-new-status="${status}" class="text-xs tos-accent rounded-full px-2 py-0.5 flex items-center gap-1">${icon("plus", "size-3")} Новая</button>
           </div>
           ${colTasks.map((t) => taskCard(t)).join("") || emptyState("Нет задач")}
         </div>`;
@@ -181,6 +187,7 @@ async function renderTasks(filter) {
   app.querySelectorAll(".card[data-task-id]").forEach((card) => {
     card.addEventListener("click", () => renderTaskDetail(card.dataset.taskId));
   });
+  window.lucide?.createIcons();
 }
 
 function taskCard(task) {
@@ -191,7 +198,7 @@ function taskCard(task) {
         <div class="font-medium text-sm">${escapeHtml(task.title)}</div>
         ${priorityBadge(task.priority)}
       </div>
-      ${task.project ? `<div class="tos-hint text-xs mb-2">📁 ${escapeHtml(task.project)}</div>` : ""}
+      ${task.project ? `<div class="tos-hint text-xs mb-2 flex items-center gap-1">${icon("folder", "size-3.5")} ${escapeHtml(task.project)}</div>` : ""}
       <div class="w-full h-1.5 rounded-full bg-black/10 overflow-hidden mb-3">
         <div class="h-full tos-accent" style="width:${progress}%"></div>
       </div>
@@ -234,6 +241,7 @@ async function renderTaskDetail(taskId) {
     renderTasks();
   });
   document.getElementById("back-btn").addEventListener("click", () => renderTasks());
+  window.lucide?.createIcons();
 }
 
 const FORM_FIELD = "tos-input w-full rounded-lg border px-3 py-2 mb-3 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--button)]";
@@ -267,6 +275,7 @@ function renderNewTaskForm(initialStatus) {
     await api.createTask(payload);
     renderTasks();
   });
+  window.lucide?.createIcons();
 }
 
 async function renderProjects() {
@@ -275,6 +284,7 @@ async function renderProjects() {
     <h1 class="text-2xl font-semibold mb-4">Проекты</h1>
     ${projects.map(projectCard).join("") || emptyState("Нет проектов")}
   `;
+  window.lucide?.createIcons();
 }
 
 function projectCard(project) {
@@ -305,7 +315,8 @@ async function renderKnowledge() {
         .join("") || emptyState("Ничего не найдено");
   };
   input.addEventListener("input", search);
-  search();
+  await search();
+  window.lucide?.createIcons();
 }
 
 function renderProfile() {
@@ -325,4 +336,5 @@ function escapeHtml(str) {
   return div.innerHTML;
 }
 
+window.lucide?.createIcons();
 render("home");
