@@ -212,14 +212,21 @@ async function renderTaskDetail(taskId) {
       <div><span class="tos-hint">Исполнитель:</span> ${task.assignee || "—"}</div>
       <div><span class="tos-hint">Проект:</span> ${task.project || "—"}</div>
       <div><span class="tos-hint">Срок:</span> ${task.due || "—"}</div>
-      <div><span class="tos-hint">Статус:</span> ${STATUS_LABELS[task.status]}</div>
     </div>
-    <button class="tos-accent w-full rounded-lg py-2.5 px-4 text-sm font-medium mb-2 hover:opacity-90 transition" id="complete-btn">Завершить</button>
+    <label class="text-sm tos-hint block mb-1">Статус</label>
+    <select id="status-select" class="${FORM_FIELD}">
+      ${Object.entries(STATUS_LABELS)
+        .map(
+          ([value, label]) =>
+            `<option value="${value}" ${value === task.status ? "selected" : ""}>${label}</option>`
+        )
+        .join("")}
+    </select>
     <button class="w-full rounded-lg py-2.5 px-4 text-sm font-medium mb-2 border tos-border text-red-600 hover:bg-red-50 transition" id="delete-btn">Удалить</button>
     <button class="w-full rounded-lg py-2.5 px-4 text-sm font-medium tos-hint" id="back-btn">← Назад</button>
   `;
-  document.getElementById("complete-btn").addEventListener("click", async () => {
-    await api.updateTask(taskId, { status: "done" });
+  document.getElementById("status-select").addEventListener("change", async (e) => {
+    await api.updateTask(taskId, { status: e.target.value });
     renderTasks();
   });
   document.getElementById("delete-btn").addEventListener("click", async () => {
