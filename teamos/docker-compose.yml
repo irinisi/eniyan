@@ -20,6 +20,7 @@ services:
   syncthing:
     image: syncthing/syncthing
     restart: unless-stopped
+    user: "0:0"
     volumes:
       - ./vault:/var/syncthing/vault
       - syncthing-config:/var/syncthing/config
