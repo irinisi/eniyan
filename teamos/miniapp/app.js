@@ -41,21 +41,92 @@ async function render(tab) {
   }
 }
 
+function initials(name) {
+  if (!name) return "?";
+  return name
+    .trim()
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((p) => p[0]?.toUpperCase())
+    .join("");
+}
+
+function avatar(name, size = "size-7") {
+  return `<div class="${size} rounded-full tos-accent flex items-center justify-center text-[11px] font-semibold shrink-0">${initials(
+    name
+  )}</div>`;
+}
+
+function statCard(icon, label, count, id) {
+  return `
+    <button data-stat="${id}" class="stat-card tos-surface rounded-xl p-3 text-left shadow-sm hover:shadow-md transition flex flex-col gap-1">
+      <div class="flex items-center justify-between">
+        <span class="text-lg">${icon}</span>
+        <span class="text-xl font-semibold">${count}</span>
+      </div>
+      <span class="text-xs tos-hint">${label}</span>
+    </button>
+  `;
+}
+
 async function renderHome() {
   const tasks = await api.getTasks();
   const today = new Date().toISOString().slice(0, 10);
-  const dueToday = tasks.filter((t) => t.due === today && t.status !== "done");
-  const overdue = tasks.filter((t) => t.due && t.due < today && t.status !== "done");
-  const projects = await api.getProjects();
+  const open = tasks.filter((t) => t.status !== "done");
+  const dueToday = open.filter((t) => t.due === today);
+  const scheduled = open.filter((t) => t.due && t.due > today);
+  const flagged = open.filter((t) => t.priority === "high");
+  const completed = tasks.filter((t) => t.status === "done");
 
   app.innerHTML = `
     <h1 class="text-2xl font-semibold mb-4">Главная</h1>
-    <h2 class="text-sm font-medium tos-hint uppercase tracking-wide mb-2">Сегодня (${dueToday.length})</h2>
-    ${dueToday.map(taskCard).join("") || emptyState("Нет задач")}
-    <h2 class="text-sm font-medium tos-hint uppercase tracking-wide mb-2 mt-5">Просрочено (${overdue.length})</h2>
-    ${overdue.map(taskCard).join("") || emptyState("Нет просроченных задач")}
-    <h2 class="text-sm font-medium tos-hint uppercase tracking-wide mb-2 mt-5">Активные проекты</h2>
-    ${projects.map(projectCard).join("") || emptyState("Нет проектов")}
+    <button class="tos-accent w-full rounded-lg py-2.5 px-4 text-sm font-medium mb-4 hover:opacity-90 transition flex items-center justify-center gap-2" id="new-task-btn">
+      <span>➕</span> Новая задача
+    </button>
+    <div class="grid grid-cols-2 gap-3 mb-5">
+      ${statCard("📅", "Сегодня", dueToday.length, "today")}
+      ${statCard("🗓️", "Запланировано", scheduled.length, "scheduled")}
+      ${statCard("📋", "Все", open.length, "all")}
+      ${statCard("🚩", "Срочные", flagged.length, "flagged")}
+      ${statCard("✅", "Выполнено", completed.length, "completed")}
+    </div>
+    <h2 class="text-sm font-medium tos-hint uppercase tracking-wide mb-2">К выполнению</h2>
+    ${taskGroup(open.filter((t) => t.status === "todo"))}
+    <h2 class="text-sm font-medium tos-hint uppercase tracking-wide mb-2 mt-5">В работе</h2>
+    ${taskGroup(open.filter((t) => t.status === "in_progress"))}
+  `;
+
+  document.getElementById("new-task-btn").addEventListener("click", renderNewTaskForm);
+
+  const statFilters = {
+    today: (t) => t.due === today && t.status !== "done",
+    scheduled: (t) => t.due && t.due > today && t.status !== "done",
+    all: (t) => t.status !== "done",
+    flagged: (t) => t.priority === "high",
+    completed: (t) => t.status === "done",
+  };
+  app.querySelectorAll("[data-stat]").forEach((btn) => {
+    btn.addEventListener("click", () => renderTasks(statFilters[btn.dataset.stat]));
+  });
+  app.querySelectorAll(".card[data-task-id]").forEach((card) => {
+    card.addEventListener("click", () => renderTaskDetail(card.dataset.taskId));
+  });
+}
+
+function taskGroup(tasks) {
+  return tasks.map(taskRow).join("") || emptyState("Нет задач");
+}
+
+function taskRow(task) {
+  return `
+    <div class="card tos-surface rounded-xl p-3 mb-2 shadow-sm hover:shadow-md transition cursor-pointer flex items-center gap-3" data-task-id="${task.id}">
+      ${avatar(task.assignee)}
+      <div class="flex-1 min-w-0">
+        <div class="font-medium text-sm truncate">${escapeHtml(task.title)}</div>
+        <div class="tos-hint text-xs mt-0.5">${task.due || "без срока"}</div>
+      </div>
+      ${priorityBadge(task.priority)}
+    </div>
   `;
 }
 
@@ -63,39 +134,71 @@ function emptyState(text) {
   return `<p class="tos-hint text-sm py-2">${text}</p>`;
 }
 
-async function renderTasks() {
-  const tasks = await api.getTasks();
+const PRIORITY_STYLE = {
+  high: "bg-red-100 text-red-700",
+  medium: "bg-amber-100 text-amber-700",
+  low: "bg-emerald-100 text-emerald-700",
+};
+
+const PRIORITY_LABEL = { high: "Высокий", medium: "Средний", low: "Низкий" };
+
+function priorityBadge(priority) {
+  const cls = PRIORITY_STYLE[priority] || "bg-gray-100 text-gray-700";
+  return `<span class="inline-block text-[11px] font-medium px-2.5 py-0.5 rounded-full shrink-0 ${cls}">${
+    PRIORITY_LABEL[priority] || priority
+  }</span>`;
+}
+
+const COLUMN_PROGRESS = { todo: 0, in_progress: 50, review: 80, done: 100 };
+
+async function renderTasks(filter) {
+  const allTasks = await api.getTasks();
+  const tasks = filter ? allTasks.filter(filter) : allTasks;
   const columns = ["todo", "in_progress", "review", "done"];
   app.innerHTML = `
     <h1 class="text-2xl font-semibold mb-4">Задачи</h1>
     <button class="tos-accent w-full rounded-lg py-2.5 px-4 text-sm font-medium mb-4 hover:opacity-90 transition" id="new-task-btn">➕ Новая задача</button>
     <div class="flex gap-3 overflow-x-auto pb-2">
       ${columns
-        .map(
-          (status) => `
-        <div class="min-w-[230px] flex-1">
-          <h3 class="text-xs font-semibold tos-hint uppercase tracking-wide mb-2">${STATUS_LABELS[status]}</h3>
-          ${tasks
-            .filter((t) => t.status === status)
-            .map(taskCard)
-            .join("")}
-        </div>`
-        )
+        .map((status) => {
+          const colTasks = tasks.filter((t) => t.status === status);
+          return `
+        <div class="min-w-[250px] flex-1">
+          <div class="flex items-center justify-between mb-2">
+            <h3 class="text-xs font-semibold tos-hint uppercase tracking-wide">${STATUS_LABELS[status]} <span class="tos-hint">(${colTasks.length})</span></h3>
+            <button data-new-status="${status}" class="text-xs tos-accent rounded-full px-2 py-0.5">+ Новая</button>
+          </div>
+          ${colTasks.map((t) => taskCard(t)).join("") || emptyState("Нет задач")}
+        </div>`;
+        })
         .join("")}
     </div>
   `;
-  document.getElementById("new-task-btn").addEventListener("click", renderNewTaskForm);
+  document.getElementById("new-task-btn").addEventListener("click", () => renderNewTaskForm());
+  app.querySelectorAll("[data-new-status]").forEach((btn) => {
+    btn.addEventListener("click", () => renderNewTaskForm(btn.dataset.newStatus));
+  });
   app.querySelectorAll(".card[data-task-id]").forEach((card) => {
     card.addEventListener("click", () => renderTaskDetail(card.dataset.taskId));
   });
 }
 
 function taskCard(task) {
+  const progress = COLUMN_PROGRESS[task.status] ?? 0;
   return `
     <div class="card tos-surface rounded-xl p-4 mb-3 shadow-sm hover:shadow-md transition cursor-pointer" data-task-id="${task.id}">
-      <div class="font-medium">${escapeHtml(task.title)}</div>
-      <div class="tos-hint text-xs mt-1">${task.assignee || "без исполнителя"} · ${task.due || "без срока"}</div>
-      <span class="tos-accent inline-block text-[11px] font-medium px-2.5 py-0.5 rounded-full mt-2">${task.priority}</span>
+      <div class="flex items-start justify-between gap-2 mb-2">
+        <div class="font-medium text-sm">${escapeHtml(task.title)}</div>
+        ${priorityBadge(task.priority)}
+      </div>
+      ${task.project ? `<div class="tos-hint text-xs mb-2">📁 ${escapeHtml(task.project)}</div>` : ""}
+      <div class="w-full h-1.5 rounded-full bg-black/10 overflow-hidden mb-3">
+        <div class="h-full tos-accent" style="width:${progress}%"></div>
+      </div>
+      <div class="flex items-center justify-between">
+        ${avatar(task.assignee, "size-6")}
+        <div class="tos-hint text-xs">${task.due || "без срока"}</div>
+      </div>
     </div>
   `;
 }
@@ -123,12 +226,12 @@ async function renderTaskDetail(taskId) {
     await api.deleteTask(taskId);
     renderTasks();
   });
-  document.getElementById("back-btn").addEventListener("click", renderTasks);
+  document.getElementById("back-btn").addEventListener("click", () => renderTasks());
 }
 
 const FORM_FIELD = "tos-input w-full rounded-lg border px-3 py-2 mb-3 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--button)]";
 
-function renderNewTaskForm() {
+function renderNewTaskForm(initialStatus) {
   app.innerHTML = `
     <h1 class="text-2xl font-semibold mb-4">Новая задача</h1>
     <input id="f-title" class="${FORM_FIELD}" placeholder="Название" />
@@ -151,6 +254,7 @@ function renderNewTaskForm() {
       due: document.getElementById("f-due").value || null,
       project: document.getElementById("f-project").value || null,
       priority: document.getElementById("f-priority").value,
+      status: initialStatus || "todo",
     };
     if (!payload.title) return;
     await api.createTask(payload);
