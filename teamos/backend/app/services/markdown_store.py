@@ -3,15 +3,22 @@
 Each entity (task, project, ...) is a single .md file: a YAML frontmatter
 block followed by free-form markdown body. This module is the only place
 that touches the filesystem directly so the Vault stays the single source
-of truth (synced separately by Syncthing).
+of truth (synced via git to Obsidian clients).
 """
 from __future__ import annotations
 
+import logging
+import os
 import re
+import subprocess
 from pathlib import Path
 from typing import Any
 
 import yaml
+
+log = logging.getLogger(__name__)
+
+_GIT_REPO = Path(os.environ.get("TEAMOS_GIT_REPO", "/repo"))
 
 FRONTMATTER_RE = re.compile(r"^---\n(.*?)\n---\n?(.*)$", re.DOTALL)
 
@@ -32,11 +39,36 @@ def read_entity(path: Path) -> dict[str, Any]:
     return {"frontmatter": frontmatter, "body": body, "path": path}
 
 
+def _git_sync(message: str) -> None:
+    try:
+        subprocess.run(
+            ["git", "add", "teamos/vault/"],
+            cwd=_GIT_REPO, check=True, capture_output=True,
+        )
+        result = subprocess.run(
+            ["git", "diff", "--cached", "--quiet"],
+            cwd=_GIT_REPO, capture_output=True,
+        )
+        if result.returncode == 0:
+            return  # nothing staged
+        subprocess.run(
+            ["git", "commit", "-m", message],
+            cwd=_GIT_REPO, check=True, capture_output=True,
+        )
+        subprocess.run(
+            ["git", "push"],
+            cwd=_GIT_REPO, check=True, capture_output=True,
+        )
+    except subprocess.CalledProcessError as exc:
+        log.warning("git sync failed: %s", exc.stderr.decode(errors="replace"))
+
+
 def write_entity(path: Path, frontmatter: dict[str, Any], body: str) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     fm_text = yaml.safe_dump(frontmatter, allow_unicode=True, sort_keys=False).strip()
     content = f"---\n{fm_text}\n---\n\n{body.strip()}\n"
     path.write_text(content, encoding="utf-8")
+    _git_sync(f"vault: update {path.name}")
 
 
 def list_entities(directory: Path) -> list[dict[str, Any]]:
@@ -48,6 +80,7 @@ def list_entities(directory: Path) -> list[dict[str, Any]]:
 def delete_entity(path: Path) -> bool:
     if path.exists():
         path.unlink()
+        _git_sync(f"vault: delete {path.name}")
         return True
     return False
 

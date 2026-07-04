@@ -5,9 +5,10 @@ services:
     ports:
       - "127.0.0.1:8000:8000"
     volumes:
-      - ./vault:/vault
+      - ../..:/repo
     environment:
-      - TEAMOS_VAULT_PATH=/vault
+      - TEAMOS_VAULT_PATH=/repo/teamos/vault
+      - TEAMOS_GIT_REPO=/repo
     env_file: .env
 
   bot:
