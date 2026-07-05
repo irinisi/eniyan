@@ -59,7 +59,12 @@ git clone https://github.com/irinisi/eniyan.git C:\teamos-repogit -C C:\teamos-r
 В настройках → **Git** → прокрути вверх:
 
 - **Auto commit-and-sync interval** → `5`
-- **Auto pull interval** → `5`
+-  **Auto pull interval** → `5`
+
+
+---
+
+тест
 
 ---
 
