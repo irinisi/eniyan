@@ -1,5 +1,5 @@
 ---
-id: test
+id: Obsidian Instruction
 title: test
 ---
 ### Что тебе нужно
