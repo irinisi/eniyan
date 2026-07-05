@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "Tasks/task-008.md",
+                "file": "Knowledge/Design System.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "task-008"
+              "title": "Design System"
             }
           }
         ]
@@ -186,13 +186,19 @@
   },
   "active": "7acec9bf01ac795b",
   "lastOpenFiles": [
-    "Tasks/task-010.md",
-    "Tasks/task-005.md",
+    "People/max.md",
+    "Projects/травин.md",
+    "Knowledge/Design System.md",
+    "Templates/project.md",
     "Tasks/task-008.md",
+    "Tasks/task-010.md",
+    "Tasks/task-012.md",
+    "Tasks/task-013.md",
     "Tasks/task-011.md",
+    "Tasks/task-017.md",
+    "Tasks/task-005.md",
     "Tasks/task-002.md",
     "Tasks/task-003.md",
-    "Templates/project.md",
     "Templates/task.md"
   ]
 }
