@@ -1,6 +1,6 @@
 ---
 id: Obsidian Instruction
-title: test
+title: Obsidian Instruction
 ---
 ### Что тебе нужно
 
@@ -68,4 +68,8 @@ git clone https://github.com/irinisi/eniyan.git C:\teamos-repogit -C C:\teamos-r
 Теперь всё что ты пишешь в Obsidian — через 5 минут появится на сайте TeamOS. И наоборот: задачи созданные в боте или мини-аппе появятся в Obsidian.
 
 **Папка Knowledge** — для общих документов (дизайн-система, заметки по проекту и т.д.), редактируйте их вместе.
+
+
+
+
 
