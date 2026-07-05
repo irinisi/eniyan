@@ -2,7 +2,32 @@
   "release": {
     "channel": "stable"
   },
-  "sharedFolders": [],
+  "sharedFolders": [
+    {
+      "path": "Knowledge",
+      "guid": "a4b935d6-ada5-45cf-b264-176a6c1fd7bd",
+      "relay": "328f96b1-9893-4e60-8746-4009aaf18cda",
+      "sync": {
+        "images": true,
+        "audio": true,
+        "videos": true,
+        "pdfs": true,
+        "otherTypes": false
+      }
+    },
+    {
+      "path": "Tasks",
+      "guid": "af044fa9-e31a-4d06-b76e-9f460d04f3bc",
+      "relay": "328f96b1-9893-4e60-8746-4009aaf18cda",
+      "sync": {
+        "images": true,
+        "audio": true,
+        "videos": true,
+        "pdfs": true,
+        "otherTypes": false
+      }
+    }
+  ],
   "endpoints": {},
   "enableDocumentStatus": false,
   "enableNewLinkFormat": false,
