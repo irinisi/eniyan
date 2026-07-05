@@ -1,0 +1,219 @@
+{
+  "main": {
+    "id": "92efc1872e4513ff",
+    "type": "split",
+    "children": [
+      {
+        "id": "7896c17234e7da35",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "fc1b4acb434e1564",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "README.md",
+                "mode": "source",
+                "source": false
+              },
+              "icon": "lucide-file",
+              "title": "README"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "vertical"
+  },
+  "left": {
+    "id": "76a9f2f8f005e158",
+    "type": "split",
+    "children": [
+      {
+        "id": "6703797159c6bc6c",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "df52846996a122f9",
+            "type": "leaf",
+            "state": {
+              "type": "file-explorer",
+              "state": {
+                "sortOrder": "alphabetical",
+                "autoReveal": false
+              },
+              "icon": "lucide-folder-closed",
+              "title": "Файловый менеджер"
+            }
+          },
+          {
+            "id": "9eda972de2fa2386",
+            "type": "leaf",
+            "state": {
+              "type": "search",
+              "state": {
+                "query": "",
+                "matchingCase": false,
+                "explainSearch": false,
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical"
+              },
+              "icon": "lucide-search",
+              "title": "Поиск"
+            }
+          },
+          {
+            "id": "cb5df7825d01ce1c",
+            "type": "leaf",
+            "state": {
+              "type": "bookmarks",
+              "state": {},
+              "icon": "lucide-bookmark",
+              "title": "Закладки"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300
+  },
+  "right": {
+    "id": "fa3a9b84f5dc5ea9",
+    "type": "split",
+    "children": [
+      {
+        "id": "0d4e338404770863",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "0c3e0dc5fcb8e4ca",
+            "type": "leaf",
+            "state": {
+              "type": "backlink",
+              "state": {
+                "file": "README.md",
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical",
+                "showSearch": false,
+                "searchQuery": "",
+                "backlinkCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-coming-in",
+              "title": "Обратные ссылки для README"
+            }
+          },
+          {
+            "id": "888b24477b4dbbba",
+            "type": "leaf",
+            "state": {
+              "type": "outgoing-link",
+              "state": {
+                "file": "README.md",
+                "linksCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-going-out",
+              "title": "Исходящие ссылки из README"
+            }
+          },
+          {
+            "id": "5f2d6f92cdbe4eb0",
+            "type": "leaf",
+            "state": {
+              "type": "tag",
+              "state": {
+                "sortOrder": "frequency",
+                "useHierarchy": true,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-tags",
+              "title": "Теги"
+            }
+          },
+          {
+            "id": "5ea7d9ab8fcd942e",
+            "type": "leaf",
+            "state": {
+              "type": "all-properties",
+              "state": {
+                "sortOrder": "frequency",
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-archive",
+              "title": "Все свойства"
+            }
+          },
+          {
+            "id": "4eab4d3a8ca64fba",
+            "type": "leaf",
+            "state": {
+              "type": "outline",
+              "state": {
+                "file": "README.md",
+                "followCursor": false,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-list",
+              "title": "Структура README"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300,
+    "collapsed": true
+  },
+  "left-ribbon": {
+    "hiddenItems": {
+      "obsidian-git:Open Git source control": false,
+      "switcher:Меню быстрого перехода": false,
+      "graph:Граф": false,
+      "canvas:Создать новый холст": false,
+      "daily-notes:Сегодняшняя заметка": false,
+      "templates:Вставить шаблон": false,
+      "command-palette:Открыть палитру команд": false,
+      "bases:Создать новую базу": false
+    }
+  },
+  "active": "fc1b4acb434e1564",
+  "lastOpenFiles": [
+    "teamos/backend/app/services/__init__.py",
+    "teamos/backend/app/services/tasks.py",
+    "teamos/backend/app/services/projects.py",
+    "teamos/backend/app/services/people.py",
+    "teamos/backend/app/services/markdown_store.py",
+    "teamos/backend/app/services/knowledge.py",
+    "teamos/backend/app/services/digest.py",
+    "teamos/backend/app/routers/__init__.py",
+    "teamos/backend/app/routers/tasks.py",
+    "teamos/backend/app/routers/projects.py",
+    "teamos/backend/app/routers/people.py",
+    "teamos/vault/Templates/task.md",
+    "teamos/vault/Templates/project.md",
+    "teamos/vault/Tasks/task-016.md",
+    "teamos/vault/Tasks/task-015.md",
+    "teamos/vault/Tasks/task-014.md",
+    "teamos/vault/Tasks/task-013.md",
+    "teamos/vault/Tasks/task-012.md",
+    "teamos/vault/Tasks/task-011.md",
+    "teamos/vault/Tasks/task-010.md",
+    "teamos/vault/Tasks/task-008.md",
+    "teamos/vault/Tasks/task-005.md",
+    "teamos/vault/Tasks/task-003.md",
+    "teamos/vault/Tasks/task-002.md",
+    "teamos/vault/Projects/травин.md",
+    "teamos/vault/People/max.md",
+    "teamos/vault/Knowledge/Design System.md",
+    "teamos/README.md",
+    "teamos/DEPLOY.md"
+  ]
+}
