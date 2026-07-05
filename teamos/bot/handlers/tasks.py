@@ -7,6 +7,7 @@ from aiogram.fsm.state import State, StatesGroup
 from aiogram.types import CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup, Message
 
 import api_client
+import user_registry
 from date_parsing import DateParseError, parse_due
 
 router = Router()
@@ -135,8 +136,41 @@ async def task_due(message: Message, state: FSMContext):
     await message.answer(f"Задача создана: {task['title']} ({task['id']})")
 
 
+@router.message(Command("iam"))
+async def set_identity(message: Message):
+    parts = message.text.split(maxsplit=1)
+    if len(parts) < 2 or not parts[1].strip():
+        assignee = message.from_user.username
+        if not assignee:
+            await message.answer("Укажи своё имя: /iam @username или /iam Имя")
+            return
+        assignee = f"@{assignee}"
+    else:
+        assignee = parts[1].strip()
+    user_registry.register(message.from_user.id, assignee)
+    await message.answer(f"Готово! Теперь /tasks будет показывать задачи для <b>{assignee}</b>.", parse_mode="HTML")
+
+
 @router.message(Command("tasks"))
 async def list_my_tasks(message: Message):
+    assignee = user_registry.get_assignee(message.from_user.id)
+    tasks = await api_client.get_tasks()
+    if assignee:
+        open_tasks = [t for t in tasks if t["status"] != "done" and t.get("assignee") == assignee]
+    else:
+        open_tasks = [t for t in tasks if t["status"] != "done"]
+    if not open_tasks:
+        hint = f" для {assignee}" if assignee else ""
+        reg_hint = "" if assignee else "\n\nСовет: используй /iam @username чтобы видеть только свои задачи."
+        await message.answer(f"Нет активных задач{hint} 🎉{reg_hint}")
+        return
+    for task in open_tasks:
+        text = f"{task['title']} — {STATUS_LABELS[task['status']]} ({telegram_link(task.get('assignee'))})"
+        await message.answer(text, reply_markup=task_quick_actions_keyboard(task["id"]), parse_mode="HTML")
+
+
+@router.message(Command("alltasks"))
+async def list_all_tasks(message: Message):
     tasks = await api_client.get_tasks()
     open_tasks = [t for t in tasks if t["status"] != "done"]
     if not open_tasks:

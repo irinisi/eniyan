@@ -16,6 +16,10 @@ services:
     restart: unless-stopped
     depends_on:
       - backend
+    volumes:
+      - bot-data:/data
+    environment:
+      - TEAMOS_REGISTRY_PATH=/data/user_registry.json
     env_file: .env
 
   syncthing:
@@ -35,3 +39,4 @@ services:
 
 volumes:
   syncthing-config:
+  bot-data:

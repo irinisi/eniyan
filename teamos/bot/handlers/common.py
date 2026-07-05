@@ -16,7 +16,9 @@ async def start(message: Message):
     await message.answer(
         "Привет! Я бот TeamOS.\n\n"
         "Команды:\n"
+        "/iam @username — привязать себя (чтобы /tasks показывал твои задачи)\n"
         "/tasks — мои задачи\n"
+        "/alltasks — все активные задачи\n"
         "/newtask — создать задачу\n"
         "/search <запрос> — поиск по базе знаний\n",
         reply_markup=keyboard,
