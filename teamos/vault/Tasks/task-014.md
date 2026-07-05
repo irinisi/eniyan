@@ -1,7 +1,7 @@
 ---
 id: task-014
 title: 'Извещения о задачах в боте '
-status: in_progress
+status: done
 assignee: '@Saveliy'
 project: null
 priority: medium
