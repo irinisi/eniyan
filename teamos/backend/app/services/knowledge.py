@@ -20,9 +20,21 @@ def list_docs() -> list[KnowledgeDoc]:
     return [_to_doc(e) for e in list_entities(KNOWLEDGE_DIR)]
 
 
+def _find_path(doc_id: str):
+    """Find .md file by exact id match or stem match (handles spaces/case)."""
+    direct = KNOWLEDGE_DIR / f"{doc_id}.md"
+    if direct.exists():
+        return direct
+    for p in KNOWLEDGE_DIR.glob("*.md"):
+        entity = read_entity(p)
+        if entity["frontmatter"].get("id") == doc_id or p.stem == doc_id:
+            return p
+    return None
+
+
 def get_doc(doc_id: str) -> KnowledgeDoc | None:
-    path = KNOWLEDGE_DIR / f"{doc_id}.md"
-    if not path.exists():
+    path = _find_path(doc_id)
+    if path is None:
         return None
     return _to_doc(read_entity(path))
 
@@ -36,7 +48,9 @@ def create_doc(data: KnowledgeDocCreate) -> KnowledgeDoc:
 
 
 def delete_doc(doc_id: str) -> bool:
-    path = KNOWLEDGE_DIR / f"{doc_id}.md"
+    path = _find_path(doc_id)
+    if path is None:
+        return False
     return delete_entity(path)
 
 
