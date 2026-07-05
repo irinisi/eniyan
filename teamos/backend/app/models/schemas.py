@@ -73,6 +73,11 @@ class Project(BaseModel):
     tasks: list[str] = Field(default_factory=list)
 
 
+class KnowledgeDocCreate(BaseModel):
+    title: str
+    body: str = ""
+
+
 class KnowledgeDoc(BaseModel):
     id: str
     title: str

@@ -417,8 +417,13 @@ async function renderProjectDetail(projectId) {
 
 async function renderKnowledge() {
   app.innerHTML = `
-    <h1 class="text-2xl font-semibold mb-4">База знаний</h1>
-    <input id="search-input" class="${FORM_FIELD}" placeholder="Поиск..." />
+    <div class="flex items-center justify-between mb-4">
+      <h1 class="text-2xl font-semibold">База знаний</h1>
+      <button id="new-doc-btn" class="tos-btn flex items-center gap-1 text-sm px-3 py-1.5">
+        ${icon("plus", "size-4")} Новый
+      </button>
+    </div>
+    <input id="search-input" class="${FORM_FIELD} mb-3" placeholder="Поиск..." />
     <div id="search-results"></div>
   `;
   const results = document.getElementById("search-results");
@@ -427,14 +432,73 @@ async function renderKnowledge() {
   const search = async () => {
     const docs = await api.searchKnowledge(input.value);
     results.innerHTML =
-      docs
-        .map(
-          (d) => `<div class="tos-surface rounded-xl p-4 mb-3 shadow-sm"><div class="font-medium">${escapeHtml(d.title)}</div></div>`
-        )
-        .join("") || emptyState("Ничего не найдено");
+      docs.map((d) => `
+        <div class="tos-surface rounded-xl p-4 mb-3 shadow-sm flex items-center justify-between cursor-pointer doc-card" data-id="${escapeHtml(d.id)}">
+          <div class="font-medium">${escapeHtml(d.title)}</div>
+          <button class="doc-delete text-red-500 ml-3 shrink-0" data-id="${escapeHtml(d.id)}">${icon("trash-2", "size-4")}</button>
+        </div>`).join("") || emptyState("Ничего не найдено");
+
+    results.querySelectorAll(".doc-card").forEach((card) => {
+      card.addEventListener("click", (e) => {
+        if (e.target.closest(".doc-delete")) return;
+        renderKnowledgeDetail(card.dataset.id);
+      });
+    });
+    results.querySelectorAll(".doc-delete").forEach((btn) => {
+      btn.addEventListener("click", async (e) => {
+        e.stopPropagation();
+        if (!confirm("Удалить документ?")) return;
+        try {
+          await api.deleteKnowledgeDoc(btn.dataset.id);
+          await search();
+        } catch (err) {
+          alert(err.message);
+        }
+      });
+    });
+    window.lucide?.createIcons();
   };
+
   input.addEventListener("input", search);
+  document.getElementById("new-doc-btn").addEventListener("click", () => renderNewDocForm());
   await search();
+  window.lucide?.createIcons();
+}
+
+async function renderKnowledgeDetail(docId) {
+  const doc = await api.getKnowledgeDoc(docId);
+  app.innerHTML = `
+    <div class="flex items-center gap-2 mb-4">
+      <button id="back-btn" class="tos-hint text-sm">${icon("arrow-left", "size-4")} Назад</button>
+    </div>
+    <h1 class="text-2xl font-semibold mb-2">${escapeHtml(doc.title)}</h1>
+    <div class="tos-surface rounded-xl p-4 shadow-sm whitespace-pre-wrap text-sm leading-relaxed">${escapeHtml(doc.body) || '<span class="tos-hint">Документ пустой</span>'}</div>
+  `;
+  document.getElementById("back-btn").addEventListener("click", () => renderKnowledge());
+  window.lucide?.createIcons();
+}
+
+async function renderNewDocForm() {
+  app.innerHTML = `
+    <div class="flex items-center gap-2 mb-4">
+      <button id="back-btn" class="tos-hint text-sm">${icon("arrow-left", "size-4")} Назад</button>
+    </div>
+    <h1 class="text-2xl font-semibold mb-4">Новый документ</h1>
+    <input id="doc-title" class="${FORM_FIELD} mb-3" placeholder="Название" />
+    <textarea id="doc-body" class="${FORM_FIELD} mb-4 h-48 resize-none" placeholder="Текст документа..."></textarea>
+    <button id="save-btn" class="tos-btn w-full py-2">Сохранить</button>
+  `;
+  document.getElementById("back-btn").addEventListener("click", () => renderKnowledge());
+  document.getElementById("save-btn").addEventListener("click", async () => {
+    const title = document.getElementById("doc-title").value.trim();
+    if (!title) { alert("Введи название"); return; }
+    try {
+      await api.createKnowledgeDoc({ title, body: document.getElementById("doc-body").value });
+      await renderKnowledge();
+    } catch (err) {
+      alert(err.message);
+    }
+  });
   window.lucide?.createIcons();
 }
 

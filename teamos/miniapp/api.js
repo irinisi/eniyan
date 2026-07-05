@@ -23,4 +23,6 @@ const api = {
 
   searchKnowledge: (q) => request(`/api/knowledge?q=${encodeURIComponent(q || "")}`),
   getKnowledgeDoc: (id) => request(`/api/knowledge/${id}`),
+  createKnowledgeDoc: (data) => request("/api/knowledge", { method: "POST", body: JSON.stringify(data) }),
+  deleteKnowledgeDoc: (id) => request(`/api/knowledge/${id}`, { method: "DELETE" }),
 };
