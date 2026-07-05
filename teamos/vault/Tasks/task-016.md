@@ -1,12 +1,12 @@
 ---
 id: task-016
 title: 'Тестовая задача проверка бекенда '
-status: todo
+status: done
 assignee: '@Saveliy'
 project: травин
 priority: high
 due: '2026-07-10'
 tags: []
 ---
-Сверяем детали задачи 
 
+Сверяем детали задачи
