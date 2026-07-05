@@ -1,7 +1,7 @@
 ---
 id: task-013
 title: 'Заглушка AnotherOffice '
-status: todo
+status: in_progress
 assignee: '@Saveliy'
 project: null
 priority: medium
