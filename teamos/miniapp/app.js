@@ -472,9 +472,15 @@ async function renderKnowledgeDetail(docId) {
       <button id="back-btn" class="tos-hint text-sm">${icon("arrow-left", "size-4")} Назад</button>
     </div>
     <h1 class="text-2xl font-semibold mb-2">${escapeHtml(doc.title)}</h1>
-    <div class="tos-surface rounded-xl p-4 shadow-sm whitespace-pre-wrap text-sm leading-relaxed">${escapeHtml(doc.body) || '<span class="tos-hint">Документ пустой</span>'}</div>
+    <div class="tos-surface rounded-xl p-4 shadow-sm prose prose-sm max-w-none text-sm" id="doc-body"></div>
   `;
   document.getElementById("back-btn").addEventListener("click", () => renderKnowledge());
+  const bodyEl = document.getElementById("doc-body");
+  if (doc.body) {
+    bodyEl.innerHTML = window.marked ? marked.parse(doc.body) : `<pre class="whitespace-pre-wrap">${escapeHtml(doc.body)}</pre>`;
+  } else {
+    bodyEl.innerHTML = '<span class="tos-hint">Документ пустой</span>';
+  }
   window.lucide?.createIcons();
 }
 
