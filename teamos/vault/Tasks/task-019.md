@@ -1,7 +1,7 @@
 ---
 id: task-019
 title: Развернуть и настроить Obsidian
-status: todo
+status: in_progress
 assignee: '@ruslanozov'
 project: травин
 priority: medium
