@@ -1,7 +1,7 @@
 ---
 id: task-018
 title: Сбор контактов подрядчиков
-status: todo
+status: in_progress
 assignee: '@ruslanozov'
 project: травин
 priority: medium
