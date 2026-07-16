@@ -1,16 +1,11 @@
 from aiogram import F, Router
 from aiogram.filters import CommandStart
-from aiogram.types import KeyboardButton, Message, ReplyKeyboardMarkup, WebAppInfo
-
-from config import MINIAPP_URL
+from aiogram.types import KeyboardButton, Message, ReplyKeyboardMarkup
 
 router = Router()
 
 MAIN_KEYBOARD = ReplyKeyboardMarkup(
     keyboard=[
-        [
-            KeyboardButton(text="🏠 Открыть TeamOS", web_app=WebAppInfo(url=MINIAPP_URL)),
-        ],
         [
             KeyboardButton(text="📋 Мои задачи"),
             KeyboardButton(text="➕ Новая задача"),
