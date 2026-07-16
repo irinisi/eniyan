@@ -128,6 +128,12 @@ async function renderHome() {
   window.lucide?.createIcons();
 }
 
+function formatDate(iso) {
+  if (!iso) return "без срока";
+  const [y, m, d] = iso.split("-");
+  return `${d}.${m}.${y}`;
+}
+
 function byDueDate(a, b) {
   if (!a.due && !b.due) return 0;
   if (!a.due) return 1;
@@ -145,7 +151,7 @@ function taskRow(task) {
       ${avatar(task.assignee)}
       <div class="flex-1 min-w-0">
         <div class="font-medium text-sm truncate">${escapeHtml(task.title)}</div>
-        <div class="tos-hint text-xs mt-0.5">${task.due || "без срока"}</div>
+        <div class="tos-hint text-xs mt-0.5">${formatDate(task.due)}</div>
       </div>
       ${priorityBadge(task.priority)}
     </div>
@@ -157,12 +163,12 @@ function emptyState(text) {
 }
 
 const PRIORITY_STYLE = {
-  high: "bg-red-100 text-red-700",
-  medium: "bg-amber-100 text-amber-700",
-  low: "bg-emerald-100 text-emerald-700",
+  high: "bg-red-100 text-red-600",
+  medium: "bg-blue-100 text-blue-600",
+  low: "bg-gray-100 text-gray-500",
 };
 
-const PRIORITY_LABEL = { high: "Высокий", medium: "Средний", low: "Низкий" };
+const PRIORITY_LABEL = { high: "HIGH", medium: "MEDIUM", low: "LOW" };
 
 function priorityBadge(priority) {
   const cls = PRIORITY_STYLE[priority] || "bg-gray-100 text-gray-700";
@@ -172,6 +178,13 @@ function priorityBadge(priority) {
 }
 
 const COLUMN_PROGRESS = { todo: 0, in_progress: 50, review: 80, done: 100 };
+
+const COLUMN_STYLE = {
+  todo:        "border-t-2 border-gray-300",
+  in_progress: "border-t-2 border-blue-400",
+  review:      "border-t-2 border-amber-400",
+  done:        "border-t-2 border-emerald-400",
+};
 
 async function renderTasks(filter) {
   const allTasks = await api.getTasks();
@@ -185,7 +198,7 @@ async function renderTasks(filter) {
         .map((status) => {
           const colTasks = tasks.filter((t) => t.status === status);
           return `
-        <div class="min-w-[250px] flex-1">
+        <div class="min-w-[250px] flex-1 tos-surface rounded-xl p-3 ${COLUMN_STYLE[status]}">
           <div class="flex items-center justify-between mb-2">
             <h3 class="text-xs font-semibold tos-hint uppercase tracking-wide">${STATUS_LABELS[status]} <span class="tos-hint">(${colTasks.length})</span></h3>
             <button data-new-status="${status}" class="text-xs tos-accent rounded-full px-2 py-0.5 flex items-center gap-1">${icon("plus", "size-3")} Новая</button>
@@ -220,43 +233,64 @@ function taskCard(task) {
       </div>
       <div class="flex items-center justify-between">
         ${avatar(task.assignee, "size-6")}
-        <div class="tos-hint text-xs">${task.due || "без срока"}</div>
+        <div class="tos-hint text-xs">${formatDate(task.due)}</div>
       </div>
     </div>
   `;
 }
 
 async function renderTaskDetail(taskId) {
-  const task = await api.getTask(taskId);
+  const [task, allTasks, projects] = await Promise.all([
+    api.getTask(taskId), api.getTasks(), api.getProjects(),
+  ]);
+  const assignees = [...new Set(allTasks.map((t) => t.assignee).filter(Boolean))];
   app.innerHTML = `
-    <h1 class="text-2xl font-semibold mb-2">${escapeHtml(task.title)}</h1>
-    <p class="text-sm mb-4">${escapeHtml(task.description || "")}</p>
-    <div class="tos-surface rounded-xl p-4 mb-4 space-y-1 text-sm">
-      <div><span class="tos-hint">Исполнитель:</span> ${assigneeLink(task.assignee)}</div>
-      <div><span class="tos-hint">Проект:</span> ${task.project || "—"}</div>
-      <div><span class="tos-hint">Срок:</span> ${task.due || "—"}</div>
+    <div class="flex items-center gap-2 mb-4">
+      <button id="back-btn" class="tos-hint text-sm">${icon("arrow-left", "size-4")} Назад</button>
     </div>
-    <label class="text-sm tos-hint block mb-1">Статус</label>
-    <select id="status-select" class="${FORM_FIELD}">
-      ${Object.entries(STATUS_LABELS)
-        .map(
-          ([value, label]) =>
-            `<option value="${value}" ${value === task.status ? "selected" : ""}>${label}</option>`
-        )
-        .join("")}
+    <h1 class="text-2xl font-semibold mb-4">Редактировать задачу</h1>
+    <input id="f-title" class="${FORM_FIELD}" placeholder="Название" value="${escapeHtml(task.title)}" />
+    <textarea id="f-description" class="${FORM_FIELD}" placeholder="Описание">${escapeHtml(task.description || "")}</textarea>
+    <input id="f-assignee" class="${FORM_FIELD}" placeholder="Исполнитель" list="f-assignee-list" value="${escapeHtml(task.assignee || "")}" />
+    <datalist id="f-assignee-list">
+      ${assignees.map((a) => `<option value="${escapeHtml(a)}"></option>`).join("")}
+    </datalist>
+    <input id="f-due" class="${FORM_FIELD}" type="date" value="${task.due || ""}" />
+    <select id="f-project" class="${FORM_FIELD}">
+      <option value="">Без проекта</option>
+      ${projects.map((p) => `<option value="${p.id}" ${task.project === p.id ? "selected" : ""}>${escapeHtml(p.title)}</option>`).join("")}
     </select>
-    <button class="w-full rounded-lg py-2.5 px-4 text-sm font-medium mb-2 border tos-border text-red-600 hover:bg-red-50 transition" id="delete-btn">Удалить</button>
-    <button class="w-full rounded-lg py-2.5 px-4 text-sm font-medium tos-hint" id="back-btn">← Назад</button>
+    <select id="f-priority" class="${FORM_FIELD}">
+      <option value="low" ${task.priority === "low" ? "selected" : ""}>LOW</option>
+      <option value="medium" ${task.priority === "medium" ? "selected" : ""}>MEDIUM</option>
+      <option value="high" ${task.priority === "high" ? "selected" : ""}>HIGH</option>
+    </select>
+    <select id="f-status" class="${FORM_FIELD}">
+      ${Object.entries(STATUS_LABELS).map(([v, l]) => `<option value="${v}" ${task.status === v ? "selected" : ""}>${l}</option>`).join("")}
+    </select>
+    <button class="tos-accent w-full rounded-lg py-2.5 px-4 text-sm font-medium mb-3 hover:opacity-90 transition" id="save-btn">Сохранить</button>
+    <button class="w-full rounded-lg py-2.5 px-4 text-sm font-medium border tos-border text-red-600 hover:bg-red-50 transition" id="delete-btn">Удалить задачу</button>
   `;
-  document.getElementById("status-select").addEventListener("change", async (e) => {
-    await api.updateTask(taskId, { status: e.target.value });
-    renderTasks();
+  document.getElementById("back-btn").addEventListener("click", () => renderTasks());
+  document.getElementById("save-btn").addEventListener("click", async () => {
+    try {
+      await api.updateTask(taskId, {
+        title: document.getElementById("f-title").value,
+        description: document.getElementById("f-description").value,
+        assignee: document.getElementById("f-assignee").value || null,
+        due: document.getElementById("f-due").value || null,
+        project: document.getElementById("f-project").value || null,
+        priority: document.getElementById("f-priority").value,
+        status: document.getElementById("f-status").value,
+      });
+      renderTasks();
+    } catch (err) { alert(err.message); }
   });
   document.getElementById("delete-btn").addEventListener("click", async () => {
+    if (!confirm("Удалить задачу?")) return;
     await api.deleteTask(taskId);
     renderTasks();
   });
-  document.getElementById("back-btn").addEventListener("click", () => renderTasks());
   window.lucide?.createIcons();
 }
 
