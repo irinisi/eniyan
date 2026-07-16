@@ -4,7 +4,7 @@ title: 'Заглушка AnotherOffice '
 status: in_progress
 assignee: '@Saveliy'
 project: null
-priority: medium
+priority: high
 due: '2026-07-04'
 tags: []
 ---
