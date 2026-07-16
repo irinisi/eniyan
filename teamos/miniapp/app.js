@@ -56,10 +56,26 @@ function initials(name) {
     .join("");
 }
 
+const AVATAR_COLORS = [
+  "bg-violet-500 text-white",
+  "bg-blue-500 text-white",
+  "bg-emerald-500 text-white",
+  "bg-amber-500 text-white",
+  "bg-rose-500 text-white",
+  "bg-cyan-500 text-white",
+  "bg-fuchsia-500 text-white",
+  "bg-orange-500 text-white",
+];
+
+function avatarColor(name) {
+  if (!name) return AVATAR_COLORS[0];
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) hash = (hash * 31 + name.charCodeAt(i)) & 0xffffffff;
+  return AVATAR_COLORS[Math.abs(hash) % AVATAR_COLORS.length];
+}
+
 function avatar(name, size = "size-7") {
-  return `<div class="${size} rounded-full tos-accent flex items-center justify-center text-[11px] font-semibold shrink-0">${initials(
-    name
-  )}</div>`;
+  return `<div class="${size} rounded-full ${avatarColor(name)} flex items-center justify-center text-[11px] font-semibold shrink-0">${initials(name)}</div>`;
 }
 
 function statCard(iconName, label, count, id) {
