@@ -256,15 +256,48 @@ function taskCard(task) {
 }
 
 async function renderTaskDetail(taskId) {
+  const task = await api.getTask(taskId);
+  const priorityBadge = task.priority
+    ? `<span class="text-xs font-medium px-2 py-0.5 rounded-full ${PRIORITY_STYLE[task.priority]}">${PRIORITY_LABEL[task.priority] || task.priority}</span>`
+    : "";
+  const statusBadge = `<span class="text-xs font-medium px-2 py-0.5 rounded-full tos-surface border tos-border">${STATUS_LABELS[task.status] || task.status}</span>`;
+  app.innerHTML = `
+    <div class="flex items-center gap-2 mb-4">
+      <button id="back-btn" class="tos-hint text-sm flex items-center gap-1">${icon("arrow-left", "size-4")} Назад</button>
+    </div>
+    <div class="flex items-start justify-between gap-2 mb-3">
+      <h1 class="text-xl font-semibold leading-snug">${escapeHtml(task.title)}</h1>
+      <div class="flex gap-1 shrink-0">${priorityBadge} ${statusBadge}</div>
+    </div>
+    ${task.description ? `<p class="tos-hint text-sm mb-4 whitespace-pre-wrap leading-relaxed">${escapeHtml(task.description)}</p>` : ""}
+    <div class="tos-surface rounded-xl p-4 mb-4 flex flex-col gap-2 text-sm">
+      <div class="flex justify-between"><span class="tos-hint">Исполнитель</span><span>${task.assignee ? escapeHtml(task.assignee) : "—"}</span></div>
+      <div class="flex justify-between"><span class="tos-hint">Срок</span><span>${formatDate(task.due)}</span></div>
+      <div class="flex justify-between"><span class="tos-hint">Проект</span><span>${task.project ? escapeHtml(task.project) : "—"}</span></div>
+    </div>
+    <button class="tos-accent w-full rounded-lg py-2.5 px-4 text-sm font-medium mb-3 hover:opacity-90 transition" id="edit-btn">Редактировать</button>
+    <button class="w-full rounded-lg py-2.5 px-4 text-sm font-medium border tos-border text-red-600 hover:bg-red-50 transition" id="delete-btn">Удалить задачу</button>
+  `;
+  document.getElementById("back-btn").addEventListener("click", () => renderTasks());
+  document.getElementById("edit-btn").addEventListener("click", () => renderTaskEditForm(taskId));
+  document.getElementById("delete-btn").addEventListener("click", async () => {
+    if (!confirm("Удалить задачу?")) return;
+    await api.deleteTask(taskId);
+    renderTasks();
+  });
+  window.lucide?.createIcons();
+}
+
+async function renderTaskEditForm(taskId) {
   const [task, allTasks, projects] = await Promise.all([
     api.getTask(taskId), api.getTasks(), api.getProjects(),
   ]);
   const assignees = [...new Set(allTasks.map((t) => t.assignee).filter(Boolean))];
   app.innerHTML = `
     <div class="flex items-center gap-2 mb-4">
-      <button id="back-btn" class="tos-hint text-sm">${icon("arrow-left", "size-4")} Назад</button>
+      <button id="back-btn" class="tos-hint text-sm flex items-center gap-1">${icon("arrow-left", "size-4")} Назад</button>
     </div>
-    <h1 class="text-2xl font-semibold mb-4">Редактировать задачу</h1>
+    <h1 class="text-xl font-semibold mb-4">Редактировать задачу</h1>
     <input id="f-title" class="${FORM_FIELD}" placeholder="Название" value="${escapeHtml(task.title)}" />
     <textarea id="f-description" class="${FORM_FIELD}" placeholder="Описание">${escapeHtml(task.description || "")}</textarea>
     <input id="f-assignee" class="${FORM_FIELD}" placeholder="Исполнитель" list="f-assignee-list" value="${escapeHtml(task.assignee || "")}" />
@@ -285,9 +318,8 @@ async function renderTaskDetail(taskId) {
       ${Object.entries(STATUS_LABELS).map(([v, l]) => `<option value="${v}" ${task.status === v ? "selected" : ""}>${l}</option>`).join("")}
     </select>
     <button class="tos-accent w-full rounded-lg py-2.5 px-4 text-sm font-medium mb-3 hover:opacity-90 transition" id="save-btn">Сохранить</button>
-    <button class="w-full rounded-lg py-2.5 px-4 text-sm font-medium border tos-border text-red-600 hover:bg-red-50 transition" id="delete-btn">Удалить задачу</button>
   `;
-  document.getElementById("back-btn").addEventListener("click", () => renderTasks());
+  document.getElementById("back-btn").addEventListener("click", () => renderTaskDetail(taskId));
   document.getElementById("save-btn").addEventListener("click", async () => {
     try {
       await api.updateTask(taskId, {
@@ -299,13 +331,8 @@ async function renderTaskDetail(taskId) {
         priority: document.getElementById("f-priority").value,
         status: document.getElementById("f-status").value,
       });
-      renderTasks();
+      renderTaskDetail(taskId);
     } catch (err) { alert(err.message); }
-  });
-  document.getElementById("delete-btn").addEventListener("click", async () => {
-    if (!confirm("Удалить задачу?")) return;
-    await api.deleteTask(taskId);
-    renderTasks();
   });
   window.lucide?.createIcons();
 }
