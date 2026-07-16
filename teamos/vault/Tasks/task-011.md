@@ -4,7 +4,7 @@ title: 'Мудборд '
 status: todo
 assignee: '@Saveliy'
 project: травин
-priority: medium
+priority: high
 due: '2026-07-09'
 tags: []
 ---
