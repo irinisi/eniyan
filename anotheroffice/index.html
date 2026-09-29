@@ -56,22 +56,12 @@
       gap: 40px;
     }
 
-    .logo {
-      font-family: "Cormorant Garamond", Georgia, serif;
-      font-style: italic;
-      font-weight: 400;
-      font-size: clamp(28px, 3.2vw, 46px);
-      color: #3b1609;
-      white-space: nowrap;
-      letter-spacing: -0.01em;
-      line-height: 1;
-      flex-shrink: 0;
-    }
-
-    .logo sup {
-      font-size: 0.45em;
-      vertical-align: super;
-      font-style: normal;
+    .logo img {
+      height: clamp(28px, 3.4vw, 50px);
+      width: auto;
+      display: block;
+      /* removes white background on light page bg */
+      mix-blend-mode: multiply;
     }
 
     .tagline {
@@ -96,8 +86,8 @@
         height: 58vh;
       }
 
-      .logo {
-        font-size: 32px;
+      .logo img {
+        height: 28px;
       }
 
       .tagline {
@@ -112,7 +102,7 @@
       <img src="hero.webp" alt="Another Office" />
     </div>
     <footer class="footer">
-      <div class="logo">Another Office<sup>©</sup></div>
+      <div class="logo"><img src="logo.png" alt="Another Office" /></div>
       <p class="tagline">A multidisciplinary company that develops travel products for non-professional travelers and weekend tourists.</p>
     </footer>
   </div>
