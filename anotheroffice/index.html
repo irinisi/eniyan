@@ -42,8 +42,8 @@
     }
 
     .hero img {
-      height: 70vh;
-      max-height: 680px;
+      height: 60vh;
+      max-height: 560px;
       width: auto;
       object-fit: contain;
       display: block;
@@ -52,15 +52,14 @@
 
     /* Bottom bar */
     .footer {
-      padding: 28px 48px 36px;
+      padding: 24px 48px 36px;
       display: flex;
       align-items: flex-end;
-      justify-content: center;
-      gap: 40px;
+      gap: 32px;
     }
 
     .logo img {
-      height: clamp(28px, 3.4vw, 50px);
+      height: clamp(24px, 2.8vw, 40px);
       width: auto;
       display: block;
       mix-blend-mode: multiply;
@@ -70,8 +69,8 @@
       font-size: 11px;
       line-height: 1.65;
       color: #6b5249;
-      max-width: 220px;
-      padding-bottom: 3px;
+      max-width: 170px;
+      padding-bottom: 2px;
       letter-spacing: 0.01em;
     }
 
@@ -80,20 +79,22 @@
       .logo-top {
         display: block;
         padding: 24px 24px 0;
+        text-align: center;
       }
 
       .logo-top img {
-        height: 28px;
+        height: 26px;
         width: auto;
         mix-blend-mode: multiply;
       }
 
       .hero img {
-        height: 60vh;
+        height: 58vh;
       }
 
       .footer {
-        padding: 16px 24px 32px;
+        padding: 12px 24px 32px;
+        justify-content: center;
       }
 
       .footer .logo {
@@ -103,6 +104,7 @@
       .tagline {
         max-width: 100%;
         font-size: 11px;
+        text-align: center;
       }
     }
   </style>
